@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>阿瓦隆 - 游戏房间</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <header>
+      <h1>阿瓦隆 Online</h1>
+      <div class="room-info">
+        <span>房间ID: <strong id="roomIdDisplay">-</strong></span>
+        <button id="copyLinkBtn">复制邀请链接</button>
+      </div>
+    </header>
+
+    <main id="gameArea">
+      <section id="waitingRoom" class="screen">
+        <h2>等待玩家加入</h2>
+        <div id="playerList" class="player-list"></div>
+        <div class="actions">
+          <button id="startGameBtn" disabled>开始游戏</button>
+        </div>
+      </section>
+
+      <section id="roleReveal" class="screen hidden">
+        <h2>你的角色</h2>
+        <div id="myRole" class="role-card"></div>
+        <p id="roleDescription" class="role-desc"></p>
+        <button id="confirmRoleBtn">确认</button>
+      </section>
+
+      <section id="missionScreen" class="screen hidden">
+        <div class="mission-header">
+          <h2>第 <span id="missionNum">1</span> 个任务</h2>
+          <div class="mission-track">
+            <div class="track-item" data-team="1"></div>
+            <div class="track-item" data-team="2"></div>
+            <div class="track-item" data-team="3"></div>
+            <div class="track-item" data-team="4"></div>
+            <div class="track-item" data-team="5"></div>
+          </div>
+        </div>
+        
+        <div id="teamSelection" class="phase">
+          <h3>队长选择队伍</h3>
+          <p>队长: <strong id="leaderName">-</strong></p>
+          <div id="playerCheckboxes" class="player-checkboxes"></div>
+          <button id="confirmTeamBtn">确认队伍</button>
+        </div>
+
+        <div id="votingPhase" class="phase hidden">
+          <h3>队伍投票</h3>
+          <p>请选择赞成或反对</p>
+          <div class="vote-buttons">
+            <button class="vote-btn approve" data-vote="approve">赞成</button>
+            <button class="vote-btn reject" data-vote="reject">反对</button>
+          </div>
+          <div id="voteResults" class="vote-results"></div>
+        </div>
+
+        <div id="missionExecution" class="phase hidden">
+          <h3>任务执行</h3>
+          <p id="missionInstruction"></p>
+          <div class="vote-buttons">
+            <button class="vote-btn success" data-mission="success">成功</button>
+            <button class="vote-btn fail" data-mission="fail">失败</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="resultScreen" class="screen hidden">
+        <h2 id="resultTitle"></h2>
+        <div id="resultDetails" class="result-details"></div>
+        <button id="nextPhaseBtn">下一阶段</button>
+      </section>
+
+      <section id="victoryScreen" class="screen hidden">
+        <h2 id="victoryTitle"></h2>
+        <p id="victoryMessage"></p>
+        <button id="playAgainBtn">再来一局</button>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="peer.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>阿瓦隆 Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>阿瓦隆 Online</h1>
+    <div class="menu">
+      <button id="createBtn">创建房间</button>
+      <button id="joinBtn">加入房间</button>
+    </div>
+    <div id="joinSection" class="hidden">
+      <input type="text" id="roomIdInput" placeholder="输入房间ID">
+      <input type="text" id="playerNameInput" placeholder="你的名字">
+      <button id="confirmJoinBtn">加入</button>
+    </div>
+    <div id="error" class="error hidden"></div>
+  </div>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="peer.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

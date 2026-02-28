@@ -1,0 +1,239 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+}
+
+.container {
+  text-align: center;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.menu {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+button {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #4a5568;
+  color: #fff;
+  transition: all 0.3s;
+}
+
+button:hover {
+  background: #667eea;
+  transform: translateY(-2px);
+}
+
+input {
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  background: #2d3748;
+  color: #fff;
+  margin: 0.5rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.error {
+  color: #fc8181;
+  margin-top: 1rem;
+}
+
+.game-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.room-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.screen {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
+
+.player-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.player-card {
+  background: #2d3748;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-card.host::before {
+  content: '👑';
+}
+
+.ready {
+  color: #68d391;
+}
+
+.not-ready {
+  color: #fc8181;
+}
+
+.role-card {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  padding: 2rem;
+  border-radius: 16px;
+  font-size: 2rem;
+  margin: 1rem 0;
+  border: 3px solid #ffd700;
+}
+
+.role-desc {
+  color: #a0aec0;
+  margin-bottom: 1rem;
+}
+
+.mission-track {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.track-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4a5568;
+  border: 3px solid #718096;
+}
+
+.track-item.success {
+  background: #68d391;
+  border-color: #48bb78;
+}
+
+.track-item.fail {
+  background: #fc8181;
+  border-color: #f56565;
+}
+
+.phase {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.player-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.checkbox-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #2d3748;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.checkbox-player input {
+  width: 20px;
+  height: 20px;
+}
+
+.vote-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.vote-btn {
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+}
+
+.vote-btn.approve, .vote-btn.success {
+  background: #48bb78;
+}
+
+.vote-btn.reject, .vote-btn.fail {
+  background: #f56565;
+}
+
+.vote-btn:hover {
+  transform: scale(1.05);
+}
+
+.vote-results {
+  margin-top: 1rem;
+}
+
+.result-details {
+  font-size: 1.2rem;
+  margin: 1rem 0;
+}
+
+.victory-screen h2 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.good-win {
+  color: #68d391;
+}
+
+.evil-win {
+  color: #fc8181;
+}
