@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素人生成器</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            color: #00d9ff;
+            text-shadow: 0 0 10px #00d9ff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .controls {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+        }
+        input[type="color"] {
+            width: 60px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        button {
+            background: #00d9ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #00fff5;
+            box-shadow: 0 0 15px #00d9ff;
+        }
+        .preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .pixel-person {
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        canvas {
+            image-rendering: pixelated;
+            border: 2px solid #333;
+        }
+        .examples {
+            margin-top: 30px;
+        }
+        .examples h2 {
+            color: #00d9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 像素人生成器</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>皮肤颜色:</label>
+                <input type="color" id="skinColor" value="#ffdbac">
+            </div>
+            <div class="control-group">
+                <label>头发颜色:</label>
+                <input type="color" id="hairColor" value="#4a3728">
+            </div>
+            <div class="control-group">
+                <label>衣服颜色:</label>
+                <input type="color" id="clothesColor" value="#e74c3c">
+            </div>
+            <div class="control-group">
+                <label>裤子颜色:</label>
+                <input type="color" id="pantsColor" value="#3498db">
+            </div>
+            <div class="control-group">
+                <label>表情:</label>
+                <button onclick="setExpression('happy')">😊 开心</button>
+                <button onclick="setExpression('cool')">😎 酷</button>
+                <button onclick="setExpression('sleepy')">😴 困</button>
+                <button onclick="setExpression('surprised')">😲 惊讶</button>
+            </div>
+            <button onclick="generateRandom()">🎲 随机生成</button>
+            <button onclick="downloadPixelPerson()">💾 下载</button>
+        </div>
+
+        <div class="preview" id="preview"></div>
+
+        <div class="examples">
+            <h2>📋 示例</h2>
+            <div class="preview" id="examples"></div>
+        </div>
+    </div>
+
+    <script>
+        const PIXEL_SIZE = 8;
+        const CANVAS_SIZE = 16;
+
+        const expressions = {
+            happy: {
+                eyes: [[5,5], [10,5]],
+                mouth: [[5,9],[6,10],[7,10],[8,10],[9,10],[10,9]]
+            },
+            cool: {
+                eyes: [[4,5], [9,6]],
+                mouth: [[6,9],[7,9],[8,9],[9,10],[10,9]]
+            },
+            sleepy: {
+                eyes: [[4,5],[5,5], [9,5],[10,5]],
+                mouth: [[6,10],[7,10],[8,10],[9,10]]
+            },
+            surprised: {
+                eyes: [[4,4],[5,5],[9,5],[10,4]],
+                mouth: [[6,9],[7,11],[8,11],[9,9]]
+            }
+        };
+
+        let currentExpression = 'happy';
+
+        function setExpression(expr) {
+            currentExpression = expr;
+            generatePreview();
+        }
+
+        function drawPixelPerson(ctx, x, y, skinColor, hairColor, clothesColor, pantsColor, expression) {
+            ctx.fillStyle = skinColor;
+            ctx.fillRect(x + 4, y, 8, 1);
+            ctx.fillRect(x + 3, y + 1, 10, 1);
+            ctx.fillRect(x + 2, y + 2, 12, 3);
+            
+            ctx.fillStyle = hairColor;
+            ctx.fillRect(x + 4, y - 1, 8, 1);
+            ctx.fillRect(x + 3, y, 2, 1);
+            ctx.fillRect(x + 11, y, 2, 1);
+            ctx.fillRect(x + 2, y + 1, 2, 2);
+            ctx.fillRect(x + 12, y + 1, 2, 2);
+            
+            ctx.fillStyle = '#000';
+            const expr = expressions[expression];
+            expr.eyes.forEach(([ex, ey]) => {
+                ctx.fillRect(x + ex, y + ey, 1, 1);
+            });
+            expr.mouth.forEach(([mx, my]) => {
+                ctx.fillRect(x + mx, y + my, 1, 1);
+            });
+            
+            ctx.fillStyle = skinColor;
+            ctx.fillRect(x + 2, y + 5, 3, 3);
+            ctx.fillRect(x + 11, y + 5, 3, 3);
+            
+            ctx.fillStyle = clothesColor;
+            ctx.fillRect(x + 2, y + 8, 12, 4);
+            ctx.fillRect(x + 1, y + 9, 2, 3);
+            ctx.fillRect(x + 13, y + 9, 2, 3);
+            
+            ctx.fillStyle = pantsColor;
+            ctx.fillRect(x + 3, y + 12, 4, 4);
+            ctx.fillRect(x + 9, y + 12, 4, 4);
+            
+            ctx.fillStyle = skinColor;
+            ctx.fillRect(x + 2, y + 12, 1, 2);
+            ctx.fillRect(x + 13, y + 12, 1, 2);
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x + 3, y + 14, 3, 2);
+            ctx.fillRect(x + 10, y + 14, 3, 2);
+        }
+
+        function generatePreview() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            
+            const skinColor = document.getElementById('skinColor').value;
+            const hairColor = document.getElementById('hairColor').value;
+            const clothesColor = document.getElementById('clothesColor').value;
+            const pantsColor = document.getElementById('pantsColor').value;
+            
+            const container = document.createElement('div');
+            container.className = 'pixel-person';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = CANVAS_SIZE * PIXEL_SIZE;
+            canvas.height = CANVAS_SIZE * PIXEL_SIZE;
+            const ctx = canvas.getContext('2d');
+            
+            drawPixelPerson(ctx, 0, 2, skinColor, hairColor, clothesColor, pantsColor, currentExpression);
+            
+            container.appendChild(canvas);
+            preview.appendChild(container);
+        }
+
+        function generateRandom() {
+            const colors = ['#ffdbac', '#f1c27d', '#e0ac69', '#8d5524', '#c68642', '#ffcd94', '#eeb462', '#d4a574'];
+            const hairColors = ['#4a3728', '#2c1810', '#8b4513', '#ffd700', '#ff4500', '#4b0082', '#c0c0c0', '#fff'];
+            const clothesColors = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c', '#e91e63', '#ff5722'];
+            const pantsColors = ['#3498db', '#2c3e50', '#34495e', '#1a252f', '#7f8c8d', '#95a5a6', '#27ae60', '#c0392b'];
+            
+            document.getElementById('skinColor').value = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById('hairColor').value = hairColors[Math.floor(Math.random() * hairColors.length)];
+            document.getElementById('clothesColor').value = clothesColors[Math.floor(Math.random() * clothesColors.length)];
+            document.getElementById('pantsColor').value = pantsColors[Math.floor(Math.random() * pantsColors.length)];
+            
+            const exprKeys = Object.keys(expressions);
+            currentExpression = exprKeys[Math.floor(Math.random() * exprKeys.length)];
+            
+            generatePreview();
+        }
+
+        function downloadPixelPerson() {
+            const canvas = document.querySelector('#preview canvas');
+            const link = document.createElement('a');
+            link.download = 'pixel-person.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function showExamples() {
+            const examples = [
+                { skin: '#ffdbac', hair: '#4a3728', clothes: '#e74c3c', pants: '#3498db', expr: 'happy' },
+                { skin: '#8d5524', hair: '#2c1810', clothes: '#2ecc71', pants: '#2c3e50', expr: 'cool' },
+                { skin: '#f1c27d', hair: '#ffd700', clothes: '#9b59b6', pants: '#7f8c8d', expr: 'surprised' },
+                { skin: '#e0ac69', hair: '#8b4513', clothes: '#f39c12', pants: '#c0392b', expr: 'sleepy' },
+                { skin: '#ffcd94', hair: '#ff4500', clothes: '#1abc9c', pants: '#1a252f', expr: 'happy' }
+            ];
+            
+            const container = document.getElementById('examples');
+            
+            examples.forEach((ex, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'pixel-person';
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE * PIXEL_SIZE;
+                canvas.height = CANVAS_SIZE * PIXEL_SIZE;
+                const ctx = canvas.getContext('2d');
+                
+                drawPixelPerson(ctx, 0, 2, ex.skin, ex.hair, ex.clothes, ex.pants, ex.expr);
+                
+                wrapper.appendChild(canvas);
+                container.appendChild(wrapper);
+            });
+        }
+
+        generatePreview();
+        showExamples();
+    </script>
+</body>
+</html>
