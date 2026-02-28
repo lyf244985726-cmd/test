@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Water Molecule Simulation</title>
+  <style>
+    :root {
+      --bg1: #07111f;
+      --bg2: #11263f;
+      --text: #dbe9ff;
+      --muted: #9eb6d8;
+      --oxygen: #ff6b6b;
+      --hydrogen: #7fc8ff;
+      --bond: #d5e5ff;
+      --hb: rgba(153, 200, 255, 0.3);
+      --panel: rgba(8, 18, 34, 0.7);
+      --panel-border: rgba(210, 230, 255, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 20% 20%, #1a3a60 0%, var(--bg1) 45%, #040a13 100%);
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .ui {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 12px 14px;
+      width: min(340px, calc(100vw - 28px));
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .ui h1 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 110px 1fr 40px;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .row output {
+      text-align: right;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #76b6ff;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sim"></canvas>
+
+  <div class="ui">
+    <h1>Water Molecules (H2O)</h1>
+    <div class="row">
+      <label for="count">Molecules</label>
+      <input id="count" type="range" min="20" max="220" value="120" />
+      <output id="countOut">120</output>
+    </div>
+    <div class="row">
+      <label for="temp">Temperature</label>
+      <input id="temp" type="range" min="1" max="40" value="16" />
+      <output id="tempOut">16</output>
+    </div>
+    <div class="row">
+      <label for="bonding">H-bonding</label>
+      <input id="bonding" type="range" min="0" max="100" value="38" />
+      <output id="bondOut">38</output>
+    </div>
+    <div class="hint">
+      Educational model (not quantum-accurate): rigid bent molecules with simplified intermolecular forces.
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("sim");
+    const ctx = canvas.getContext("2d");
+
+    const countInput = document.getElementById("count");
+    const tempInput = document.getElementById("temp");
+    const bondingInput = document.getElementById("bonding");
+    const countOut = document.getElementById("countOut");
+    const tempOut = document.getElementById("tempOut");
+    const bondOut = document.getElementById("bondOut");
+
+    let W = 0, H = 0, DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const O_RADIUS = 5.2;
+    const H_RADIUS = 3.1;
+    const OH_DIST = 12.5;
+    const HOH_ANGLE = 104.5 * Math.PI / 180;
+
+    const REPULSION_RADIUS = 22;
+    const HBOND_RADIUS = 50;
+
+    let molecules = [];
+
+    function rand(min, max) { return min + Math.random() * (max - min); }
+
+    function createMolecule() {
+      const speedScale = 0.35 + temperature() * 0.05;
+      return {
+        x: rand(30, W - 30),
+        y: rand(30, H - 30),
+        vx: rand(-1, 1) * speedScale,
+        vy: rand(-1, 1) * speedScale,
+        angle: rand(0, Math.PI * 2),
+        av: rand(-0.025, 0.025)
+      };
+    }
+
+    function temperature() { return Number(tempInput.value); }
+    function bondingStrength() { return Number(bondingInput.value) / 100; }
+
+    function syncOutputs() {
+      countOut.textContent = countInput.value;
+      tempOut.textContent = tempInput.value;
+      bondOut.textContent = bondingInput.value;
+    }
+
+    function setMoleculeCount(target) {
+      while (molecules.length < target) molecules.push(createMolecule());
+      if (molecules.length > target) molecules.length = target;
+    }
+
+    syncOutputs();
+    setMoleculeCount(Number(countInput.value));
+
+    countInput.addEventListener("input", () => {
+      syncOutputs();
+      setMoleculeCount(Number(countInput.value));
+    });
+    tempInput.addEventListener("input", syncOutputs);
+    bondingInput.addEventListener("input", syncOutputs);
+
+    function hydrogenPositions(m) {
+      const a1 = m.angle - HOH_ANGLE / 2;
+      const a2 = m.angle + HOH_ANGLE / 2;
+      return [
+        { x: m.x + Math.cos(a1) * OH_DIST, y: m.y + Math.sin(a1) * OH_DIST },
+        { x: m.x + Math.cos(a2) * OH_DIST, y: m.y + Math.sin(a2) * OH_DIST }
+      ];
+    }
+
+    function update() {
+      const temp = temperature();
+      const hb = bondingStrength();
+      const thermalKick = 0.004 * temp;
+
+      for (let i = 0; i < molecules.length; i++) {
+        const a = molecules[i];
+        const aHs = hydrogenPositions(a);
+
+        for (let j = i + 1; j < molecules.length; j++) {
+          const b = molecules[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 0.0001) continue;
+          const d = Math.sqrt(d2);
+
+          if (d < REPULSION_RADIUS) {
+            const overlap = (REPULSION_RADIUS - d) / REPULSION_RADIUS;
+            const force = overlap * 0.18;
+            const fx = (dx / d) * force;
+            const fy = (dy / d) * force;
+            a.vx -= fx; a.vy -= fy;
+            b.vx += fx; b.vy += fy;
+          }
+
+          if (d < HBOND_RADIUS) {
+            const bHs = hydrogenPositions(b);
+
+            for (const h of aHs) {
+              const hdx = b.x - h.x;
+              const hdy = b.y - h.y;
+              const hd2 = hdx * hdx + hdy * hdy;
+              if (hd2 > 100 && hd2 < HBOND_RADIUS * HBOND_RADIUS) {
+                const hd = Math.sqrt(hd2);
+                const strength = hb * 0.012 * (1 - hd / HBOND_RADIUS);
+                a.vx += (hdx / hd) * strength;
+                a.vy += (hdy / hd) * strength;
+                b.vx -= (hdx / hd) * strength * 0.5;
+                b.vy -= (hdy / hd) * strength * 0.5;
+              }
+            }
+            for (const h of bHs) {
+              const hdx = a.x - h.x;
+              const hdy = a.y - h.y;
+              const hd2 = hdx * hdx + hdy * hdy;
+              if (hd2 > 100 && hd2 < HBOND_RADIUS * HBOND_RADIUS) {
+                const hd = Math.sqrt(hd2);
+                const strength = hb * 0.012 * (1 - hd / HBOND_RADIUS);
+                b.vx += (hdx / hd) * strength;
+                b.vy += (hdy / hd) * strength;
+                a.vx -= (hdx / hd) * strength * 0.5;
+                a.vy -= (hdy / hd) * strength * 0.5;
+              }
+            }
+          }
+        }
+      }
+
+      for (const m of molecules) {
+        m.vx += rand(-1, 1) * thermalKick;
+        m.vy += rand(-1, 1) * thermalKick;
+        m.av += rand(-1, 1) * thermalKick * 0.02;
+
+        m.vx *= 0.992;
+        m.vy *= 0.992;
+        m.av *= 0.995;
+
+        m.x += m.vx;
+        m.y += m.vy;
+        m.angle += m.av;
+
+        const margin = 18;
+        if (m.x < margin) { m.x = margin; m.vx *= -0.9; }
+        if (m.x > W - margin) { m.x = W - margin; m.vx *= -0.9; }
+        if (m.y < margin) { m.y = margin; m.vy *= -0.9; }
+        if (m.y > H - margin) { m.y = H - margin; m.vy *= -0.9; }
+      }
+    }
+
+    function drawHydrogenBonds() {
+      const maxD2 = HBOND_RADIUS * HBOND_RADIUS;
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--hb").trim();
+      ctx.lineWidth = 1;
+
+      ctx.beginPath();
+      for (let i = 0; i < molecules.length; i++) {
+        const a = molecules[i];
+        const aHs = hydrogenPositions(a);
+        for (let j = i + 1; j < molecules.length; j++) {
+          const b = molecules[j];
+          const bHs = hydrogenPositions(b);
+
+          for (const h of aHs) {
+            const dx = b.x - h.x;
+            const dy = b.y - h.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 > 120 && d2 < maxD2) {
+              ctx.moveTo(h.x, h.y);
+              ctx.lineTo(b.x, b.y);
+            }
+          }
+
+          for (const h of bHs) {
+            const dx = a.x - h.x;
+            const dy = a.y - h.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 > 120 && d2 < maxD2) {
+              ctx.moveTo(h.x, h.y);
+              ctx.lineTo(a.x, a.y);
+            }
+          }
+        }
+      }
+      ctx.stroke();
+    }
+
+    function drawMolecule(m) {
+      const hs = hydrogenPositions(m);
+
+      ctx.strokeStyle = "rgba(223,235,255,0.88)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y); ctx.lineTo(hs[0].x, hs[0].y);
+      ctx.moveTo(m.x, m.y); ctx.lineTo(hs[1].x, hs[1].y);
+      ctx.stroke();
+
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--oxygen").trim();
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, O_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--hydrogen").trim();
+      for (const h of hs) {
+        ctx.beginPath();
+        ctx.arc(h.x, h.y, H_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      const g = ctx.createRadialGradient(W * 0.2, H * 0.2, 20, W * 0.2, H * 0.2, Math.max(W, H));
+      g.addColorStop(0, "rgba(78,145,232,0.08)");
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      drawHydrogenBonds();
+      for (const m of molecules) drawMolecule(m);
+    }
+
+    function frame() {
+      update();
+      draw();
+      requestAnimationFrame(frame);
+    }
+    frame();
+  </script>
+</body>
+</html>
