@@ -100,7 +100,9 @@ function handleMessage(data, conn) {
       updatePlayerList();
       break;
     case 'startGame':
-      assignRoles();
+      gameState.players = data.players;
+      updatePlayerList();
+      assignRoles(data.roles);
       showScreen('roleReveal');
       break;
     case 'roleAssigned':
@@ -172,13 +174,10 @@ function updatePlayerList() {
   }
 }
 
-function assignRoles() {
-  const playerCount = gameState.players.length;
-  const roleConfigs = getRolesForPlayerCount(playerCount);
+function assignRoles(roles) {
+  const roleConfigs = roles || getRolesForPlayerCount(gameState.players.length);
   
   gameState.roles = roleConfigs;
-  
-  const shuffledPlayers = [...gameState.players].sort(() => Math.random() - 0.5);
   
   gameState.players.forEach((player, index) => {
     const role = roleConfigs[index];
@@ -422,8 +421,9 @@ elements.copyLinkBtn.addEventListener('click', () => {
 
 elements.startGameBtn.addEventListener('click', () => {
   if (gameState.isHost) {
-    broadcast({ type: 'startGame' });
-    assignRoles();
+    const roles = getRolesForPlayerCount(gameState.players.length);
+    broadcast({ type: 'startGame', players: gameState.players, roles });
+    assignRoles(roles);
     showScreen('roleReveal');
   }
 });
